@@ -82,7 +82,9 @@ class VLLMModelConfig:
     tensor_parallel_size: int = 1  # how many GPUs to use for tensor parallelism
     pipeline_parallel_size: int = 1  # how many GPUs to use for pipeline parallelism
     data_parallel_size: int = 1  # how many GPUs to use for data parallelism
-    max_model_length: int | None = None  # maximum length of the model, ussually infered automatically. reduce this if you encouter OOM issues, 4096 is usually enough
+    max_model_length: int | None = (
+        None  # maximum length of the model, ussually infered automatically. reduce this if you encouter OOM issues, 4096 is usually enough
+    )
     swap_space: int = 4  # CPU swap space size (GiB) per GPU.
     seed: int = 1234
     trust_remote_code: bool = False
@@ -328,6 +330,29 @@ class VLLMModel(LightevalModel):
             sampling_params.max_tokens = max_new_tokens
             sampling_params.stop = stop_tokens
             sampling_params.logprobs = 1 if returns_logits else 0
+
+            import os
+
+            use_early_exit = os.getenv("USE_EARLY_EXIT_THINK", "false").lower() == "true"
+
+            if use_early_exit:
+                from lighteval.logits_processor import EarlyExitThinkLogitsProcessor
+
+                end_of_thinking = str(os.getenv("EARLY_EXIT_TOKEN", "</think>"))
+                threshold = float(os.getenv("EARLY_EXIT_THRESHOLD", "0.8"))
+                complete_sentences = os.getenv("EARLY_EXIT_COMPLETE_SENTENCES", "true").lower() == "true"
+
+                processor = EarlyExitThinkLogitsProcessor(
+                    target_token_text=end_of_thinking,
+                    tokenizer=self.tokenizer,
+                    threshold=threshold,
+                    complete_sentences=complete_sentences,
+                )
+
+                if not hasattr(sampling_params, "logits_processors") or sampling_params.logits_processors is None:
+                    sampling_params.logits_processors = []
+
+                sampling_params.logits_processors.append(processor)
 
         else:
             sampling_params.temperature = 0
