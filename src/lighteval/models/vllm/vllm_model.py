@@ -332,8 +332,10 @@ class VLLMModel(LightevalModel):
             sampling_params.logprobs = 1 if returns_logits else 0
 
             import os
+            from loguru import logger
 
             use_early_exit = os.getenv("USE_EARLY_EXIT_THINK", "false").lower() == "true"
+            logger.info(f"USE_EARLY_EXIT_THINK {use_early_exit}")
 
             if use_early_exit:
                 from lighteval.logits_processor import EarlyExitThinkLogitsProcessor
@@ -341,6 +343,9 @@ class VLLMModel(LightevalModel):
                 end_of_thinking = str(os.getenv("EARLY_EXIT_TOKEN", "</think>"))
                 threshold = float(os.getenv("EARLY_EXIT_THRESHOLD", "0.8"))
                 complete_sentences = os.getenv("EARLY_EXIT_COMPLETE_SENTENCES", "true").lower() == "true"
+                logger.info(f"EARLY_EXIT_TOKEN {end_of_thinking}")
+                logger.info(f"EARLY_EXIT_THRESHOLD {threshold}")
+                logger.info(f"EARLY_EXIT_COMPLETE_SENTENCES {complete_sentences}")
 
                 processor = EarlyExitThinkLogitsProcessor(
                     target_token_text=end_of_thinking,
@@ -353,6 +358,7 @@ class VLLMModel(LightevalModel):
                     sampling_params.logits_processors = []
 
                 sampling_params.logits_processors.append(processor)
+                logger.info(f"sampling_params.logits_processors {sampling_params.logits_processors}")
 
         else:
             sampling_params.temperature = 0
