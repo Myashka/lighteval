@@ -68,7 +68,6 @@ class EarlyExitThinkLogitsProcessor:
         target_prob = probs[self.target_token_id].item()
 
         if target_prob > self.threshold:
-            logger.info("FORCE THINK EXIT")
             forced_logits = torch.full_like(logits, float('-inf'))
             forced_logits[self.target_token_id] = 0
             return forced_logits
