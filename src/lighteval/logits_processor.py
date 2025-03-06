@@ -16,7 +16,6 @@ def text_to_token(tokenizer: PreTrainedTokenizer, text: str, last: bool):
     tokens = tokenizer.encode(text, add_special_tokens=False)
 
     if not last and len(tokens) > 2:
-        # Usually the first token indicates the beginning, and the second token is our main token
         raise Exception(f"Can't convert {text} to token. It has {len(tokens)} tokens.")
 
     return tokens[-1]
@@ -50,8 +49,8 @@ class EarlyExitThinkLogitsProcessor:
             text_to_token(tokenizer, ".", last=True),
             text_to_token(tokenizer, "!", last=True),
             text_to_token(tokenizer, "?", last=True),
-            text_to_token(tokenizer, ":", last=True),  # Опционально
-            text_to_token(tokenizer, ";", last=True),  # Опционально
+            text_to_token(tokenizer, ":", last=True),
+            text_to_token(tokenizer, ";", last=True),
         }
 
         self.new_line_tokens = get_new_line_tokens(tokenizer)
@@ -59,13 +58,10 @@ class EarlyExitThinkLogitsProcessor:
 
     def __call__(self, prompt_tokens_ids: List[int], past_token_ids: List[int], logits: torch.Tensor) -> torch.Tensor:
         if not past_token_ids:
-            logger.info("SKIP THINK EXIT <if not past_token_ids>")
             return logits
         if self.target_token_id in past_token_ids:
-            logger.info("SKIP THINK EXIT <self.target_token_id in past_token_ids>")
             return logits
         if self.complete_sentences and past_token_ids[-1] not in self.stop_tokens:
-            logger.info("SKIP THINK EXIT <self.complete_sentences and past_token_ids[-1] not in self.stop_tokens>")
             return logits
 
         probs = F.softmax(logits, dim=-1)
@@ -77,5 +73,4 @@ class EarlyExitThinkLogitsProcessor:
             forced_logits[self.target_token_id] = 0
             return forced_logits
 
-        logger.info("SKIP THINK EXIT <None>")
         return logits
