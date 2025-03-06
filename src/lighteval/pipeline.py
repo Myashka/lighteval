@@ -30,7 +30,7 @@ from contextlib import nullcontext
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum, auto
-
+import torch
 import numpy as np
 from tqdm import tqdm
 
@@ -187,9 +187,11 @@ class Pipeline:
         if model_config is not None:
             if self.parallel_context:
                 return NanotronLightevalModel(
-                    checkpoint_path=os.path.dirname(self.pipeline_parameters.nanotron_checkpoint_path)
-                    if self.pipeline_parameters.nanotron_checkpoint_path
-                    else "",
+                    checkpoint_path=(
+                        os.path.dirname(self.pipeline_parameters.nanotron_checkpoint_path)
+                        if self.pipeline_parameters.nanotron_checkpoint_path
+                        else ""
+                    ),
                     nanotron_config=self.model_config,
                     parallel_context=self.parallel_context,
                     debug_one_layer_model=False,
@@ -259,6 +261,13 @@ class Pipeline:
         logger.info("--- INIT SEEDS ---")
         random.seed(1234)
         np.random.seed(1234)
+        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
+        os.environ['PL_GLOBAL_SEED'] = str(1234)
+        os.environ['PYTHONHASHSEED'] = str(1234)
+        torch.manual_seed(1234)
+        torch.cuda.manual_seed_all(1234)
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
         if self.accelerator is not None:
             self.accelerator.wait_for_everyone()
         if self.parallel_context is not None:
