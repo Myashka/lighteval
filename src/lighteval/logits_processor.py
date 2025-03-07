@@ -42,6 +42,7 @@ class EarlyExitThinkLogitsProcessor:
         self.tokenizer = tokenizer
         self.target_token_id = tokenizer.convert_tokens_to_ids(target_token_text)
         self.threshold = threshold
+        self.counter = 0
 
         self.complete_sentences = complete_sentences
 
@@ -68,8 +69,9 @@ class EarlyExitThinkLogitsProcessor:
         target_prob = probs[self.target_token_id].item()
 
         if target_prob > self.threshold:
-            forced_logits = torch.full_like(logits, float('-inf'))
-            forced_logits[self.target_token_id] = 0
-            return forced_logits
+            self.counter += 1
+            mask = torch.full_like(logits, float('-inf'))
+            mask[self.target_token_id] = 0
+            return logits + mask
 
         return logits

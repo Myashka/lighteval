@@ -399,6 +399,8 @@ class VLLMModel(LightevalModel):
                 sampling_params=sampling_params,
                 use_tqdm=True,
             )
+        if hasattr(sampling_params, "logits_processors") or sampling_params.logits_processors is not None:
+            logger.info(f"EARLY EXIT COUNTER: {processor.counter}/{len(outputs)}")
 
         return outputs
 
