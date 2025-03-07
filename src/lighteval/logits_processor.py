@@ -50,7 +50,6 @@ class EarlyExitThinkLogitsProcessor:
             text_to_token(tokenizer, ".", last=True),
             text_to_token(tokenizer, "!", last=True),
             text_to_token(tokenizer, "?", last=True),
-            text_to_token(tokenizer, ":", last=True),
             text_to_token(tokenizer, ";", last=True),
         }
 
