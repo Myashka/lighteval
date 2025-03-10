@@ -152,6 +152,7 @@ def vllm(
         evaluation_tracker=evaluation_tracker,
         model_config=model_config,
         metric_options=metric_options,
+        seed=model_config.seed,
     )
 
     pipeline.evaluate()

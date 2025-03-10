@@ -139,6 +139,7 @@ class Pipeline:
         model_config=None,
         model=None,
         metric_options=None,
+        seed: int = 1234,
     ):
         if not (model or model_config):
             raise ValueError("Must provide either a model or model config when creating a pipeline.")
@@ -154,11 +155,11 @@ class Pipeline:
         self.evaluation_tracker = evaluation_tracker
         self._metric_options = metric_options or {}
         self.accelerator, self.parallel_context = self._init_parallelism_manager()
+        self._init_random_seeds(seed=seed)
         self.model = self._init_model(model_config, model)
 
         self.evaluation_tracker.general_config_logger.log_model_info(self.model.model_info)
         self._init_tasks_and_requests(tasks=tasks)
-        self._init_random_seeds()
         # Final results
         self.final_dict: dict = None
 
@@ -257,15 +258,12 @@ class Pipeline:
                     if num_samples:
                         task.num_samples = [num_samples]
 
-    def _init_random_seeds(self):
+    def _init_random_seeds(self, seed: int):
         logger.info("--- INIT SEEDS ---")
-        random.seed(1234)
-        np.random.seed(1234)
-        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:2'
-        os.environ['PL_GLOBAL_SEED'] = str(1234)
-        os.environ['PYTHONHASHSEED'] = str(1234)
-        torch.manual_seed(1234)
-        torch.cuda.manual_seed_all(1234)
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
         if self.accelerator is not None:
