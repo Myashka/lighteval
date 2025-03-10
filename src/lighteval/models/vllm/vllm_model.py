@@ -101,6 +101,7 @@ class VLLMModelConfig:
     def __post_init__(self):
         if not self.generation_parameters:
             self.generation_parameters = GenerationParameters()
+        self.seed = int(self.seed)
 
 
 class VLLMModel(LightevalModel):
