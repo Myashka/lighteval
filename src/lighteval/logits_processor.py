@@ -66,18 +66,8 @@ class EarlyExitThinkLogitsProcessor:
 
         probs = F.softmax(logits, dim=-1)
         target_prob = probs[self.target_token_id].item()
-        logger.info(f"RANK {torch.distributed.get_rank()} _______START_______")
-        logger.info(f"Step {len(past_token_ids)}: prob(</think>)={target_prob}, threshold={self.threshold}")
-        logger.info(
-            f"Step {len(past_token_ids)}: prompt_tokens_ids: {self.tokenizer.decode(prompt_tokens_ids, skip_special_tokens=False)}"
-        )
-        logger.info(
-            f"Step {len(past_token_ids)}: past_token_ids: {self.tokenizer.decode(past_token_ids, skip_special_tokens=False)}"
-        )
-        logger.info(f"RANK {torch.distributed.get_rank()} _______END_______")
 
         if target_prob > self.threshold:
-            logger.info(f"Threshold exceeded: prob={target_prob}, forcing </think> ID - {self.target_token_id}")
             self.counter += 1
             mask = torch.full_like(logits, float('-inf'))
             mask[self.target_token_id] = 1e9
