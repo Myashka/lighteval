@@ -330,7 +330,8 @@ class VLLMModel(LightevalModel):
             sampling_params.n = num_samples
             sampling_params.max_tokens = max_new_tokens
             sampling_params.stop = stop_tokens
-            sampling_params.logprobs = 1 if returns_logits else 0
+            # sampling_params.logprobs = 1 if returns_logits else 0
+            sampling_params.logprobs = 1
 
             import os
             from loguru import logger
